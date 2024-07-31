@@ -3,25 +3,76 @@ import requests
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from home.serializer import LoginSerializer, RegisterSerializer
 from django.conf import settings
 from home.models import Image
 from utils.azure_blob import AzureBlobService
 from rest_framework.reverse import reverse
+from rest_framework import status
+
+from django.contrib.auth import authenticate
+from rest_framework.authtoken.models import Token
+
+
+
+
+
 
 
 @api_view(['GET'])
 def api_root(request, format=None):
     return Response({
-        'index': reverse('index', request=request, format=format),
+        'login': reverse('login', request=request, format=format),
         'getphotos': reverse('getphotos', request=request, format=format),
+        'register':reverse('register',request=request,format=format)
     })
 
-@api_view(['GET', 'POST'])
-def login(request):
-    if request.method == 'POST':
-        data=request.data
-    return Response(data)
 
+class register(APIView):
+    def post(self,request):
+        data=request.data
+        serializer=RegisterSerializer(data=data)
+
+        if not serializer.is_valid():
+            return Response({
+                'status':False,
+                'message':serializer.errors
+            },  status.HTTP_400_BAD_REQUEST)
+        
+        serializer.save()
+
+        return Response({
+            'status':True,
+            'message':'user created'
+            },status.HTTP_201_CREATED)
+
+
+
+class login(APIView):
+    def post(self,request):
+        data=request.data
+        serializer=LoginSerializer(data=data)
+        if not serializer.is_valid():
+            return Response({
+                'status':False,
+                'message':serializer.errors
+            },  status.HTTP_400_BAD_REQUEST)
+        
+
+        user=authenticate(username=serializer.data['username'], password=serializer.data['password'])
+        if user is not None:
+            token, _ =Token.objects.get_or_create(user=user)
+            return Response({
+                'status': True,
+                'message': 'Login successful',
+                'token': str(token)
+            }, status=status.HTTP_200_OK)
+        else:
+            return Response({
+                'status': False,
+                'message': 'Invalid Username or Password!'
+            }, status=status.HTTP_401_UNAUTHORIZED)
+        
 
 class GetPhotos(APIView):
     def get(self,request):
