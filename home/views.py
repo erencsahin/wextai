@@ -1,6 +1,6 @@
 import uuid
 import requests
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view,permission_classes
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from home.serializer import LoginSerializer, RegisterSerializer
@@ -11,15 +11,14 @@ from rest_framework.reverse import reverse
 from rest_framework import status
 
 from django.contrib.auth import authenticate
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.models import Token
-
-
-
-
-
+from rest_framework.permissions import AllowAny
 
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def api_root(request, format=None):
     return Response({
         'login': reverse('login', request=request, format=format),
@@ -27,8 +26,8 @@ def api_root(request, format=None):
         'register':reverse('register',request=request,format=format)
     })
 
-
 class register(APIView):
+    permission_classes = [AllowAny]
     def post(self,request):
         data=request.data
         serializer=RegisterSerializer(data=data)
@@ -46,9 +45,8 @@ class register(APIView):
             'message':'user created'
             },status.HTTP_201_CREATED)
 
-
-
 class login(APIView):
+    permission_classes = [AllowAny]
     def post(self,request):
         data=request.data
         serializer=LoginSerializer(data=data)
@@ -72,9 +70,10 @@ class login(APIView):
                 'status': False,
                 'message': 'Invalid Username or Password!'
             }, status=status.HTTP_401_UNAUTHORIZED)
-        
 
 class GetPhotos(APIView):
+    authentication_classes=[TokenAuthentication]
+    permission_classes=[IsAuthenticated]
     def get(self,request):
         query = request.query_params.get("query")
         if not query:
@@ -101,18 +100,15 @@ class GetPhotos(APIView):
                 blob_url = azure_service.upload_data(image_data, blob_name)
 
                 photo['url'] = blob_url
-                photo['src']['original'] = blob_url
+                photo['src']={'original','large2x','large','medium','small','portrait','landscape','tiny'}.add(blob_url)
 
                 image_record = Image(photographer=photographer, url=blob_url)
                 try:
                     image_record.save()
                 except Exception as db_error:
                     return Response({"error": f"Database save error: {str(db_error)}"}, status=500)
-
             return Response(data)
         except requests.RequestException as e:
             return Response({"error": str(e)}, status=400)
-        except Exception as e:
-            return Response({"error": "An error occurred"}, status=500)
         
     

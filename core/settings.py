@@ -18,7 +18,6 @@ AZURE_ACCOUNT_NAME = 'myaccount'
 AZURE_ACCOUNT_KEY = '00000000'
 AZURE_CONTAINER_NAME = 'wext-ai-images'
 AZURE_CONNECTION_STRING_DEV = 'DefaultEndpointsProtocol=https;AccountName=wextimagedb;AccountKey=QGAOPPtvDv+iLd6v2hiw7ph8EPRFAiLOSm5cNydc2bBHRSE+m7eDrtM2F2K1paVLFTxVXrTRtrW3+ASthbTczA==;EndpointSuffix=core.windows.net'
-AZURE_CONNECTION_STRING_PROD = 'DefaultEndpointsProtocol=https;AccountName=wextimagedb;AccountKey=QGAOPPtvDv+iLd6v2hiw7ph8EPRFAiLOSm5cNydc2bBHRSE+m7eDrtM2F2K1paVLFTxVXrTRtrW3+ASthbTczA==;EndpointSuffix=core.windows.net'
 
 # Application definition
 
@@ -132,5 +131,9 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.SessionAuthentication',
-    ]
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
 }
