@@ -9,7 +9,6 @@ from utils.azure_blob import AzureBlobService
 from rest_framework.reverse import reverse
 
 
-
 @api_view(['GET'])
 def api_root(request, format=None):
     return Response({
@@ -17,12 +16,15 @@ def api_root(request, format=None):
         'getphotos': reverse('getphotos', request=request, format=format),
     })
 
-@api_view(['GET','POST'])
-def index(request):
-    return Response("Hello world")
+@api_view(['GET', 'POST'])
+def login(request):
+    if request.method == 'POST':
+        data=request.data
+    return Response(data)
+
 
 class GetPhotos(APIView):
-    def get(self, request):
+    def get(self,request):
         query = request.query_params.get("query")
         if not query:
             return Response({"error": "Query parameter is required"}, status=400)
@@ -50,7 +52,6 @@ class GetPhotos(APIView):
                 photo['url'] = blob_url
                 photo['src']['original'] = blob_url
 
-                # Veritabanı kaydı kontrolü
                 image_record = Image(photographer=photographer, url=blob_url)
                 try:
                     image_record.save()
@@ -62,3 +63,5 @@ class GetPhotos(APIView):
             return Response({"error": str(e)}, status=400)
         except Exception as e:
             return Response({"error": "An error occurred"}, status=500)
+        
+    
