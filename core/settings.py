@@ -16,7 +16,7 @@ ALLOWED_HOSTS = ['*']
 
 AZURE_ACCOUNT_NAME = 'myaccount'
 AZURE_ACCOUNT_KEY = '00000000'
-AZURE_CONTAINER_NAME = 'wext-ai-images'
+AZURE_CONTAINER_NAME = 'wextai-images'
 AZURE_CONNECTION_STRING_DEV = 'DefaultEndpointsProtocol=https;AccountName=wextimagedb;AccountKey=QGAOPPtvDv+iLd6v2hiw7ph8EPRFAiLOSm5cNydc2bBHRSE+m7eDrtM2F2K1paVLFTxVXrTRtrW3+ASthbTczA==;EndpointSuffix=core.windows.net'
 
 # Application definition
@@ -34,6 +34,9 @@ INSTALLED_APPS = [
     'home',
     
 ]
+
+AUTH_USER_MODEL="home.CustomUser"
+
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
@@ -82,7 +85,7 @@ WSGI_APPLICATION = 'core.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'djongo',
-        'NAME': 'abc',
+        'NAME': 'db',
     }
 }
 
@@ -137,3 +140,4 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ],
 }
+

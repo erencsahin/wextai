@@ -72,9 +72,11 @@ class login(APIView):
             }, status=status.HTTP_401_UNAUTHORIZED)
 
 class GetPhotos(APIView):
-    authentication_classes=[TokenAuthentication]
-    permission_classes=[IsAuthenticated]
-    def get(self,request):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        print("request fetch start ==============================")
         query = request.query_params.get("query")
         if not query:
             return Response({"error": "Query parameter is required"}, status=400)
@@ -91,24 +93,27 @@ class GetPhotos(APIView):
 
             azure_service = AzureBlobService()
             for photo in data.get('photos', []):
-                image_url = photo['src']['original']
-                photographer = photo['photographer']
+                photo_id = photo['id']
+                blob_name = f"{query}/{photo_id}.jpg"
 
-                image_data = requests.get(image_url).content
-                unique_id = uuid.uuid4()
-                blob_name = f"{photographer}/{unique_id}.jpg"
-                blob_url = azure_service.upload_data(image_data, blob_name)
+                if azure_service.check_blob_exists(blob_name):
+                    blob_url = azure_service.get_blob_url(blob_name)
+                    photo['url'] = blob_url
+                    photo['src'] = { 'original','large2x','large','medium','small','portrait','landscape','tiny'}.add(blob_url)
+                else:
+                    image_url = photo['src']['original']
+                    image_data = requests.get(image_url).content
 
-                photo['url'] = blob_url
-                photo['src']={'original','large2x','large','medium','small','portrait','landscape','tiny'}.add(blob_url)
+                    blob_url = azure_service.upload_data(image_data, blob_name)
 
-                image_record = Image(photographer=photographer, url=blob_url)
-                try:
-                    image_record.save()
-                except Exception as db_error:
-                    return Response({"error": f"Database save error: {str(db_error)}"}, status=500)
+                    photo['url'] = blob_url
+                    photo['src'] = { 'original','large2x','large','medium','small','portrait','landscape','tiny'}.add(blob_url)
+
+                    image_record = Image(photographer=photo['photographer'], url=blob_url)
+                    try:
+                        image_record.save(force_insert=True)
+                    except Exception as db_error:
+                        return Response({"error": f"Database save error: {str(db_error)}"}, status=500)
             return Response(data)
         except requests.RequestException as e:
             return Response({"error": str(e)}, status=400)
-        
-    
