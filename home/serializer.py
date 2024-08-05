@@ -55,3 +55,9 @@ class CustomUserSerializer(serializers.ModelSerializer):
             instance.set_password(password)
         instance.save()
         return instance
+
+
+class SelectedPhotoSerializer(serializers.Serializer):
+    query=serializers.CharField()
+    photo_url=serializers.URLField()
+    photographer=serializers.CharField()
