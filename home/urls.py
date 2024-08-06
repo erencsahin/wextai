@@ -1,12 +1,10 @@
 from django.urls import path
-from .views import CsvFileUpload, login, api_root, register, getPhotos, SaveSelectedPhoto
+from .views import CsvFileUpload, login, api_root, register, getPhotos, savephoto
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
     TokenVerifyView,
 )
-
-
 
 urlpatterns = [
     path('', api_root, name='api-root'),
@@ -18,5 +16,5 @@ urlpatterns = [
     path('token/verify', TokenVerifyView.as_view(), name='token_verify'),
     path('csvfileupload/',CsvFileUpload.as_view(),name='csvfileupload'),
     path('getphotos/',getPhotos.as_view(),name='getPhotos'),
-    path('saveselectedphoto/',SaveSelectedPhoto.as_view(),name='savephoto'),
+    path('savephoto/',savephoto.as_view(),name='savephoto'),
 ]

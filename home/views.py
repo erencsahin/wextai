@@ -22,8 +22,10 @@ from rest_framework.permissions import AllowAny
 def api_root(request, format=None):
     return Response({
         'login': reverse('login', request=request, format=format),
-        'getphotos': reverse('getphotos', request=request, format=format),
-        'register': reverse('register', request=request, format=format)
+        'getphotos': reverse('getPhotos', request=request, format=format),
+        'register': reverse('register', request=request, format=format),
+        'csvfileupload': reverse('csvfileupload', request=request, format=format),
+        'savephoto': reverse('savephoto', request=request, format=format),
     })
 
 class register(APIView):
@@ -73,6 +75,7 @@ class login(APIView):
 
 class CsvFileUpload(APIView):
     parser_classes=(MultiPartParser,FormParser)
+    authentication_classes = [JWTAuthentication]
     permission_classes=[IsAuthenticated]
 
     def post(self,request,*args,**kwargs):
@@ -94,6 +97,7 @@ class CsvFileUpload(APIView):
             return Response({"error": str(e)})
 
 class getPhotos(APIView):
+    authentication_classes = [JWTAuthentication]
     permission_classes=[IsAuthenticated]
 
     def post(self,request,*args, **kwargs):
@@ -118,28 +122,39 @@ class getPhotos(APIView):
         
         return Response(photos,status=status.HTTP_200_OK)
     
-class SaveSelectedPhoto(APIView):
+class savephoto(APIView):
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
-        serializer = SelectedPhotoSerializer(data=request.data)
-        if serializer.is_valid():
-            azure_service = AzureBlobService()
-            photo_url = serializer.validated_data['photo_url']
-            query = serializer.validated_data['query']
-            photographer = serializer.validated_data['photographer']
-            
-            image_data = requests.get(photo_url).content
-            photo_id = photo_url.split('/')[-1].split('.')[0]
-            blob_name = f"{query}/{photo_id}.jpg"
+        photos_data = request.data.get('photos', [])
+        if not photos_data:
+            return Response({"error": "No photos data provided."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        azure_service = AzureBlobService()
+        saved_photos = []
 
-            if Image.objects.filter(url__icontains=blob_name).exists():
-                return Response({"message": "Photo already exists", "blob_url": blob_name}, status=status.HTTP_200_OK)
-            
-            blob_url = azure_service.upload_data(image_data, blob_name)
-            
-            image_record = Image(photographer=photographer, url=blob_url)
-            image_record.save()
-            
-            return Response({"message": "Photo saved successfully", "blob_url": blob_url}, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        for photo_data in photos_data:
+            serializer = SelectedPhotoSerializer(data=photo_data)
+            if serializer.is_valid():
+                photo_url = serializer.validated_data['photo_url']
+                query = serializer.validated_data['query']
+                photographer = serializer.validated_data['photographer']
+                
+                image_data = requests.get(photo_url).content
+                
+                photo_id = photo_url.split('/')[-1].split('-')[-1].split('.')[0]
+                blob_name = f"{query}/{photo_id}.jpg" 
+                print(blob_name)
+
+                if Image.objects.filter(url__icontains=blob_name).exists():
+                    saved_photos.append({"message": "Photo already exists", "blob_url": blob_name})
+                else:
+                    blob_url = azure_service.upload_data(image_data, blob_name)
+                    image_record = Image(photographer=photographer, url=blob_url)
+                    image_record.save()
+                    saved_photos.append({"message": "Photo saved successfully", "blob_url": blob_url})
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        return Response(saved_photos, status=status.HTTP_201_CREATED)
