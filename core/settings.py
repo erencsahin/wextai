@@ -101,7 +101,7 @@ DATABASES = {
         'ENGINE': 'djongo',
         'NAME': 'wext',
         'CLIENT':{
-            'host':'mongodb+srv://<erencsahin34>:<AuO1UqK4A72Hw39D>@cluster0.mongodb.net/mydatabase?retryWrites=true&w=majority',
+            'host':'mongodb+srv://<erencsahin34>:<AuO1UqK4A72Hw39D>@cluster0.mongodb.net/wext?retryWrites=true&w=majority',
             'username':'erencsahin34',
             'password':'AuO1UqK4A72Hw39D'
         }
