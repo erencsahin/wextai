@@ -8,7 +8,7 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
-ENV DJANGO_SETTINGS_MODULE=core.core.settings
+ENV DJANGO_SETTINGS_MODULE=core.settings
 
 EXPOSE 8000
 
