@@ -1,17 +1,15 @@
-FROM python:3.12
-
-ENV PYTHONBUFFERED=1
-
-ENV PORT 8000
+FROM python:3.9-slim
 
 WORKDIR /app
 
-COPY ./app/
+COPY requirements.txt /app/
+RUN pip install --no-cache-dir -r requirements.txt
 
-RUN pip install --upgrade pip
+COPY .   /app/
 
-RUN pip install -r requirements.txt
+ENV DJANGO_SETTINGS_MODULE=core.settings
+ENV PYTHONUNBUFFERED=1
 
-CMD gunicorn server.wsgi:application --bind 0.0.0.0:8000
+RUN python manage.py collectstatic --noinput
 
-EXPOSE 8000
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
