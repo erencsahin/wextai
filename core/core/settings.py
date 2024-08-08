@@ -72,7 +72,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
 ]
 
-ROOT_URLCONF = 'core.urls'
+ROOT_URLCONF = 'core.core.urls'
 
 TEMPLATES = [
     {
